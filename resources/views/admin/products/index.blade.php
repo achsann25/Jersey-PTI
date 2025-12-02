@@ -17,12 +17,17 @@
     </a>
 </div>
 
-<!-- Pesan Sukses (Akan muncul setelah Create/Update/Delete) -->
+<!-- Pesan Sukses (Muncul setelah Create/Update/Delete) -->
 @if(session('success'))
-    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded shadow-sm flex justify-between items-center" role="alert">
-        <div>
-            <p class="font-bold">Sukses!</p>
-            <p>{{ session('success') }}</p>
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded shadow-sm flex justify-between items-center animate-pulse" role="alert">
+        <div class="flex items-center">
+            <svg class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+                <p class="font-bold">Sukses!</p>
+                <p>{{ session('success') }}</p>
+            </div>
         </div>
     </div>
 @endif
@@ -52,9 +57,16 @@
                     <!-- Info Produk (Gambar & Nama) -->
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                            <div class="h-10 w-10 flex-shrink-0 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-lg font-bold shadow-sm">
-                                <!-- Jika ada gambar (nanti), tampilkan gambar. Jika tidak, inisial nama tim -->
-                                {{ substr($product->team_name, 0, 1) }}
+                            <div class="h-10 w-10 flex-shrink-0">
+                                @if($product->image)
+                                    <!-- Jika ada gambar, tampilkan gambar dari storage -->
+                                    <img src="{{ asset('storage/' . $product->image) }}" class="h-10 w-10 rounded-full object-cover border border-gray-200" alt="{{ $product->team_name }}">
+                                @else
+                                    <!-- Jika tidak ada gambar, tampilkan inisial -->
+                                    <div class="h-10 w-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-sm font-bold border border-indigo-200">
+                                        {{ substr($product->team_name, 0, 1) }}
+                                    </div>
+                                @endif
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-bold text-gray-900">{{ $product->team_name }}</div>
@@ -65,7 +77,7 @@
 
                     <!-- Musim -->
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200">
                             {{ $product->season }}
                         </span>
                     </td>
@@ -95,35 +107,41 @@
                     <!-- Tombol Aksi -->
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                         <div class="flex justify-center space-x-3">
-                            <!-- Tombol Edit (Dummy Link dulu) -->
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900 flex items-center gap-1 transition">
+                            <!-- Tombol Edit -->
+                            <a href="{{ route('products.edit', $product->id) }}" class="text-indigo-600 hover:text-indigo-900 flex items-center gap-1 transition font-semibold">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                                 Edit
                             </a>
                             
-                            <!-- Tombol Hapus (Dummy Form dulu) -->
-                            <button class="text-red-600 hover:text-red-900 flex items-center gap-1 transition" onclick="alert('Fitur Hapus akan aktif di Tahap selanjutnya!')">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                Hapus
-                            </button>
+                            <!-- Tombol Hapus (Menggunakan Form DELETE) -->
+                            <form action="{{ route('products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data jersey ini? Tindakan ini tidak bisa dibatalkan.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:text-red-900 flex items-center gap-1 transition font-semibold">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Hapus
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
                 @empty
                 <!-- Tampilan Jika Data Kosong -->
                 <tr>
-                    <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                    <td colspan="6" class="px-6 py-16 text-center text-gray-500">
                         <div class="flex flex-col items-center justify-center">
-                            <svg class="h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                            </svg>
+                            <div class="bg-gray-100 rounded-full p-4 mb-4">
+                                <svg class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                </svg>
+                            </div>
                             <p class="text-lg font-medium text-gray-900">Belum ada data jersey</p>
-                            <p class="text-sm text-gray-500">Mulai dengan menambahkan data jersey pertama Anda.</p>
-                            <a href="{{ route('products.create') }}" class="mt-4 text-indigo-600 hover:text-indigo-800 font-medium">
+                            <p class="text-sm text-gray-500 mb-4">Mulai dengan menambahkan data jersey pertama Anda ke dalam sistem.</p>
+                            <a href="{{ route('products.create') }}" class="text-indigo-600 hover:text-indigo-800 font-bold border-b-2 border-indigo-200 hover:border-indigo-600 transition">
                                 + Tambah Data Sekarang
                             </a>
                         </div>
@@ -134,9 +152,11 @@
         </table>
     </div>
     
-    <!-- Bagian Footer Tabel (Pagination Placeholder) -->
-    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+    <!-- Bagian Footer Tabel -->
+    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
         <p class="text-xs text-gray-500">Menampilkan seluruh data stok yang tersedia.</p>
+        <p class="text-xs text-gray-400">E-JERSEY System v1.0</p>
     </div>
 </div>
 @endsection
+```
