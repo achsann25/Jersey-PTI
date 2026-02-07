@@ -11,24 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // 1. Agar HTTPS Railway dikenali dengan benar
-        $middleware->trustProxies(at: '*'); 
+        // Agar HTTPS Railway terdeteksi dengan benar
+        $middleware->trustProxies(at: '*');
 
-        // 2. Prioritaskan Session agar login tidak 'mental'
-        $middleware->priority([
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\IsAdmin::class,
+        // PENTING: Izinkan Midtrans mengirim notifikasi tanpa terhalang token CSRF
+        $middleware->validateCsrfTokens(except: [
+            '/midtrans-callback'
         ]);
-
+        
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdmin::class,
-        ]);
-
-        // 3. Matikan CSRF untuk testing login jika masih macet (Opsional tapi membantu)
-        $middleware->validateCsrfTokens(except: [
-            '/admin/login',
-            '/login'
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
