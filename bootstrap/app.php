@@ -11,23 +11,24 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // 1. Agar Laravel percaya dengan Proxy HTTPS Railway
+        // 1. Agar HTTPS Railway dikenali dengan benar
         $middleware->trustProxies(at: '*'); 
 
-        // 2. Memaksa Session agar selalu aktif di setiap request
-        $middleware->append(\Illuminate\Session\Middleware\StartSession::class);
+        // 2. Prioritaskan Session agar login tidak 'mental'
+        $middleware->priority([
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\IsAdmin::class,
+        ]);
 
-        // 3. Alias untuk Middleware Admin kamu
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
 
-        // 4. MENGATASI ERROR 419: Kecualikan rute penting dari token CSRF
+        // 3. Matikan CSRF untuk testing login jika masih macet (Opsional tapi membantu)
         $middleware->validateCsrfTokens(except: [
-            '/midtrans-callback', 
-            '/login',            
-            '/admin/login',      
-            '/register',         
+            '/admin/login',
+            '/login'
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
