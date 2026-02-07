@@ -64,7 +64,7 @@
             <div class="text-center">
                 <p class="text-sm">Disetujui Oleh,</p>
                 <div class="h-20"></div>
-                <p class="text-sm font-bold border-t border-black pt-1">( Dosen Penguji )</p>
+                <p class="text-sm font-bold border-t border-black pt-1">( Manajer JerseyHolic )</p>
             </div>
             <div class="text-center">
                 <p class="text-sm">Bandung, {{ date('d M Y') }}</p>
