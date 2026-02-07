@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\{
     AuthController, 
     AdminController, 
@@ -91,12 +93,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 6. JURUS SAKTI: FIX DATABASE (MENGATASI COLUMN NOT FOUND USER_ID)
+| 6. JURUS SAKTI: FIX DATABASE & AUTO-CREATE ADMIN
 |--------------------------------------------------------------------------
 */
 Route::get('/fix-database', function () {
     try {
-        // 1. Jalankan migrasi tabel-tabel bawaan (termasuk sessions)
+        // 1. Jalankan migrasi
         Artisan::call('migrate', ['--force' => true]);
         
         // 2. Tambahkan kolom user_id ke tabel orders jika belum ada
@@ -107,13 +109,27 @@ Route::get('/fix-database', function () {
                 }
             });
         }
+
+        // 3. BUAT AKUN ADMIN OTOMATIS
+        $adminEmail = 'admin@gmail.com';
+        $adminExists = User::where('email', $adminEmail)->orWhere('role', 'admin')->exists();
         
-        // 3. Bersihkan Cache
+        if (!$adminExists) {
+            User::create([
+                'name' => 'Administrator JerseyHolic',
+                'username' => 'admin',
+                'email' => $adminEmail,
+                'password' => Hash::make('admin123'),
+                'role' => 'admin'
+            ]);
+        }
+        
+        // 4. Bersihkan Cache
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
         Artisan::call('view:clear');
         
-        return "MANTAP! Database sudah sinkron & kolom user_id sudah dibuat. Cek Riwayat Pesanan sekarang, Bro!";
+        return "MANTAP! Database sinkron & Akun Admin siap (User: admin, Pass: admin123). Coba login Admin sekarang!";
     } catch (\Exception $e) {
         return "Gagal update: " . $e->getMessage();
     }
