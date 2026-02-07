@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth; // Tambahkan ini
 
 use App\Http\Controllers\{
     AuthController,
@@ -46,9 +47,7 @@ Route::post('/check-ongkir', [RajaOngkirController::class, 'checkCost']);
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::get('/admin/login', [AuthController::class, 'showAdminLoginForm'])
-    ->name('admin.login');
-
+Route::get('/admin/login', [AuthController::class, 'showAdminLoginForm'])->name('admin.login');
 Route::post('/admin/login', [AuthController::class, 'login']);
 
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
@@ -69,7 +68,6 @@ Route::post('/midtrans-callback', [OrderController::class, 'callback']);
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
-
     // Cart
     Route::post('/cart/add/{id}', [CartController::class, 'addToCart'])->name('cart.add');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -91,16 +89,11 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
-
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])
-        ->name('admin.dashboard');
-
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::resource('/products', ProductController::class);
-
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::patch('/orders/{id}', [AdminOrderController::class, 'updateStatus'])->name('orders.update');
     Route::patch('/orders/{id}/resi', [AdminOrderController::class, 'updateResi'])->name('orders.update_resi');
-
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 });
 
@@ -110,32 +103,49 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::get('/fix-database', function () {
+    try {
+        Artisan::call('migrate', ['--force' => true]);
 
-    Artisan::call('migrate', ['--force' => true]);
+        if (Schema::hasTable('orders')) {
+            Schema::table('orders', function (Blueprint $table) {
+                if (!Schema::hasColumn('orders', 'user_id')) {
+                    $table->unsignedBigInteger('user_id')->nullable()->after('id');
+                }
+            });
+        }
 
-    if (Schema::hasTable('orders')) {
-        Schema::table('orders', function (Blueprint $table) {
-            if (!Schema::hasColumn('orders', 'user_id')) {
-                $table->unsignedBigInteger('user_id')->nullable()->after('id');
-            }
-        });
+        $adminEmail = 'admin@gmail.com';
+        if (!User::where('role', 'admin')->exists()) {
+            User::create([
+                'name' => 'Administrator',
+                'username' => 'admin',
+                'email' => $adminEmail,
+                'password' => Hash::make('admin123'),
+                'role' => 'admin'
+            ]);
+        }
+
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('view:clear');
+
+        return 'OK - Database & Admin siap (User: admin, Pass: admin123)';
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
     }
+});
 
-    $adminEmail = 'admin@gmail.com';
-
-    if (!User::where('role', 'admin')->exists()) {
-        User::create([
-            'name' => 'Administrator',
-            'username' => 'admin',
-            'email' => $adminEmail,
-            'password' => Hash::make('admin123'),
-            'role' => 'admin'
-        ]);
+/*
+|--------------------------------------------------------------------------
+| 8. PENYELAMAT DEMO: FORCE LOGIN ADMIN
+|--------------------------------------------------------------------------
+| Jika login admin macet saat demo, akses link: /force-login-admin
+*/
+Route::get('/force-login-admin', function () {
+    $admin = User::where('role', 'admin')->first();
+    if ($admin) {
+        Auth::login($admin);
+        return redirect()->route('admin.dashboard');
     }
-
-    Artisan::call('config:clear');
-    Artisan::call('cache:clear');
-    Artisan::call('view:clear');
-
-    return 'OK - Database & Admin siap';
+    return 'Admin tidak ditemukan. Jalankan /fix-database dulu.';
 });
