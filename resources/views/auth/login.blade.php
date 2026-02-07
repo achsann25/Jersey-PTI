@@ -62,8 +62,8 @@
                 @endif
 
                 <!-- Form Start -->
-                <form action="{{ route('admin.login') }}" method="POST" class="space-y-6">
-                    @csrf
+<form action="/admin/login" method="POST" class="space-y-6">
+    @csrf
                     
                     <!-- Username Input -->
                     <div>
