@@ -1,6 +1,6 @@
 <?php
 
-namespace App\App\Http\Controllers;
+namespace App\Http\Controllers; // Fix: Namespace sudah benar
 
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -38,37 +38,34 @@ class AuthController extends Controller
     }
 
     /**
-     * 3. PROSES LOGIN (Dipakai oleh Customer & Admin)
+     * 3. PROSES LOGIN
      */
     public function login(Request $request)
     {
-        // 1. Validasi Input
         $credentials = $request->validate([
             'username' => 'required',
             'password' => 'required',
         ]);
 
-        // 2. Coba Login
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
             
-            // Logika Proteksi Pintu Admin vs Customer
+            // Proteksi Role
             if ($request->is('admin/*') || $request->is('admin/login')) {
                  if ($user->role !== 'admin') {
                      Auth::logout();
-                     return back()->withErrors(['username' => 'Akses ditolak! Halaman ini hanya untuk Pegawai/Admin.']);
+                     return back()->withErrors(['username' => 'Akses ditolak! Khusus Admin.']);
                  }
             } else {
                  if ($user->role !== 'customer') {
                      Auth::logout();
-                     return back()->withErrors(['username' => 'Akun Pegawai silakan login melalui pintu khusus.']);
+                     return back()->withErrors(['username' => 'Akun Pegawai silakan login lewat pintu khusus.']);
                  }
             }
 
-            // Regenerate session untuk keamanan
             $request->session()->regenerate();
 
-            // 3. Redirect ke tempat yang sesuai (Gunakan intended agar tidak mental ke home terus)
+            // Gunakan intended() agar tidak mental ke home terus di Railway
             if ($user->role === 'admin') {
                 return redirect()->intended(route('admin.dashboard'));
             } 
@@ -82,7 +79,7 @@ class AuthController extends Controller
     }
 
     /**
-     * 4. REGISTER (Hanya untuk Customer)
+     * 4. REGISTER
      */
     public function showRegisterForm()
     {
@@ -111,7 +108,7 @@ class AuthController extends Controller
 
         if (Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
             $request->session()->regenerate();
-            return redirect()->intended(route('home'))->with('success', 'Registrasi berhasil! Selamat datang.');
+            return redirect()->intended(route('home'))->with('success', 'Registrasi berhasil!');
         }
 
         return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
