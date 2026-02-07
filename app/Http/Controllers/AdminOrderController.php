@@ -34,20 +34,22 @@ public function updateResi(Request $request, $id)
 
     $order = \App\Models\Order::findOrFail($id);
     
-    // 1. Update database dulu (biar data aman)
+    // 1. Update database dulu
     $order->update([
         'status' => 'shipped',
         'resi' => $request->resi
     ]);
 
-    // 2. Kirim Email dengan proteksi Try-Catch
+    // 2. Kirim Email - Pastikan memanggil OrderShippedMail
     try {
-        \Illuminate\Support\Facades\Mail::to($order->customer_email)
-            ->send(new \App\Mail\ShippingNotification($order));
+        Mail::to($order->customer_email)
+            ->send(new OrderShippedMail($order)); // SINKRONKAN DISINI
             
         return back()->with('success', 'Resi berhasil diupdate dan email notifikasi terkirim!');
     } catch (\Exception $e) {
-        // Jika gagal konek SMTP, tetap balik ke halaman sebelumnya tapi kasih tau errornya
+        // Log error untuk debug di Railway Logs
+        \Log::error("Mail Error: " . $e->getMessage());
+        
         return back()->with('success', 'Resi berhasil diupdate, tapi email gagal dikirim (Cek koneksi SMTP).');
     }
 }
