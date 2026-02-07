@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('team_name'); // Nama Tim (misal: MU)
-            $table->string('season');    // Musim (misal: 2024/2025)
-            $table->integer('price');    // Harga
-            $table->integer('stock');    // Stok
-            $table->string('image')->nullable(); // Foto Jersey
+            $table->string('team_name'); 
+            $table->string('season');    
+            $table->integer('price');    
+            $table->integer('stock');    
+            $table->string('image')->nullable(); 
             $table->timestamps();
         });
     }

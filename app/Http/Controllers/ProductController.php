@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product; // Pastikan Model Product di-import
+use App\Models\Product; 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; // Wajib di-import untuk fitur hapus gambar
+use Illuminate\Support\Facades\Storage; 
 
 class ProductController extends Controller
 {

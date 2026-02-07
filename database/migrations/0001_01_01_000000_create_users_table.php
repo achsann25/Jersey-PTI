@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('username')->unique(); // Wajib untuk login admin
+            $table->string('email')->unique();    // <--- TAMBAHAN PENTING
             $table->string('password'); // Wajib hash
             $table->enum('role', ['admin', 'customer'])->default('customer');
             $table->rememberToken();

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin - E-JERSEY</title>
+    <title>Login Admin - JerseyHolic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -13,25 +13,23 @@
 <body class="bg-white">
 
     <div class="flex min-h-screen">
-        
-        <!-- BAGIAN KIRI: GAMBAR (Hanya muncul di layar laptop/desktop) -->
-        <!-- Kita pakai gambar stadion/bola biar sesuai tema Jersey -->
+    
         <div class="hidden lg:flex lg:w-1/2 relative bg-gray-900">
-            <img src="https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=1920&auto=format&fit=crop" 
+<img src="{{ asset('img/bglogin.jpeg') }}" 
                  class="absolute inset-0 w-full h-full object-cover opacity-60" alt="Soccer Stadium">
             
             <div class="relative z-10 w-full flex flex-col justify-center p-12 text-white">
                 <h2 class="text-5xl font-bold mb-6">Manage Your<br>Dream Team.</h2>
-                <p class="text-xl text-gray-200">Sistem Informasi Manajemen Stok Jersey Terlengkap </p>
+                <p class="text-xl text-gray-200">Sistem Informasi Manajemen Stok Jersey</p>
                 
                 <div class="mt-10 flex gap-4">
                     <div class="bg-white/20 backdrop-blur-sm p-4 rounded-lg border border-white/30">
-                        <p class="font-bold text-2xl">100+</p>
-                        <p class="text-sm">Jersey Club</p>
+                        <p class="font-bold text-2xl">UTS</p>
+                        <p class="text-sm">PTI 2025</p>
                     </div>
                     <div class="bg-white/20 backdrop-blur-sm p-4 rounded-lg border border-white/30">
-                        <p class="font-bold text-2xl">24/7</p>
-                        <p class="text-sm">Realtime System</p>
+                        <p class="font-bold text-2xl">JerseyHolic</p>
+                        <p class="text-sm">sistem</p>
                     </div>
                 </div>
             </div>
@@ -53,21 +51,7 @@
                     <p class="text-gray-500 mt-2">Silakan login untuk masuk ke Dashboard Admin.</p>
                 </div>
 
-                <!-- ALERT: Info Kredensial (Biar Dosen Gampang Login) -->
-                <div class="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4 rounded-r-lg">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm text-blue-800 font-bold">Akun Wajib UTS:</p>
-                            <p class="text-sm text-blue-700">Username: <span class="font-mono bg-blue-200 px-1 rounded">admin</span></p>
-                            <p class="text-sm text-blue-700">Password: <span class="font-mono bg-blue-200 px-1 rounded">admin1234</span></p>
-                        </div>
-                    </div>
-                </div>
+                
 
                 <!-- ALERT: Error Message (Jika Salah Password) -->
                 @if($errors->any())
@@ -78,7 +62,7 @@
                 @endif
 
                 <!-- Form Start -->
-                <form action="{{ route('login') }}" method="POST" class="space-y-6">
+                <form action="{{ route('admin.login') }}" method="POST" class="space-y-6">
                     @csrf
                     
                     <!-- Username Input -->
@@ -120,7 +104,7 @@
 
                 <div class="mt-8 text-center">
                     <p class="text-sm text-gray-500">
-                        &copy; 2025 E-JERSEY Project UTS. <br> JerseyKita.
+                        &copy; 2025 JerseyHolic Project UTS. <br> 
                     </p>
                 </div>
 

@@ -6,7 +6,7 @@
 <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
     <div>
         <h1 class="text-2xl font-bold text-gray-800">Manajemen Stok Jersey</h1>
-        <p class="text-gray-600 text-sm">Kelola data jersey tim kesayangan Anda di sini.</p>
+        <p class="text-gray-600 text-sm">bismillah jualan beneran</p>
     </div>
     <!-- Tombol Tambah Data -->
     <a href="{{ route('products.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-200 flex items-center gap-2 transform hover:scale-105">
@@ -154,8 +154,8 @@
     
     <!-- Bagian Footer Tabel -->
     <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
-        <p class="text-xs text-gray-500">Menampilkan seluruh data stok yang tersedia.</p>
-        <p class="text-xs text-gray-400">E-JERSEY System v1.0</p>
+        <p class="text-xs text-gray-500">Menampilkan seluruh data stok yang tersedia</p>
+        <p class="text-xs text-gray-400">JerseyHolic System</p>
     </div>
 </div>
 @endsection

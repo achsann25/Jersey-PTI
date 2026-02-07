@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         DB::table('users')->insert([
             'name' => 'Administrator',
             'username' => 'admin',
+            'email' => 'admin@ejersey.com', // <--- Pastikan baris ini ada
             'password' => Hash::make('admin1234'), // Password di-hash
             'role' => 'admin',
         ]);
