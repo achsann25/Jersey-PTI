@@ -28,39 +28,27 @@ class AdminOrderController extends Controller
 
 public function updateResi(Request $request, $id)
 {
-    $order = \App\Models\Order::with('product')->findOrFail($id);
-    
-    // Simpan status lama sebelum diupdate untuk pengecekan
-    $previousStatus = $order->status;
-
-    // 1. Update data resi dan status ke database
-    $order->update([
-        'tracking_number' => $request->tracking_number,
-        'status' => 'shipped'
+    $request->validate([
+        'resi' => 'required'
     ]);
 
-    // 2. Logika Pengurangan Stok
-    // Kita kurangi stok HANYA JIKA status sebelumnya bukan 'shipped' 
-    // agar stok tidak berkurang berkali-kali jika admin update resi lagi.
-    if ($previousStatus !== 'shipped') {
-        $product = $order->product;
-        if ($product->stock >= $order->quantity) {
-            $product->decrement('stock', $order->quantity);
-        } else {
-            return redirect()->back()->with('error', 'Stok tidak mencukupi untuk memproses pengiriman!');
-        }
+    $order = \App\Models\Order::findOrFail($id);
+    
+    // 1. Update database dulu (biar data aman)
+    $order->update([
+        'status' => 'shipped',
+        'resi' => $request->resi
+    ]);
+
+    // 2. Kirim Email dengan proteksi Try-Catch
+    try {
+        \Illuminate\Support\Facades\Mail::to($order->customer_email)
+            ->send(new \App\Mail\ShippingNotification($order));
+            
+        return back()->with('success', 'Resi berhasil diupdate dan email notifikasi terkirim!');
+    } catch (\Exception $e) {
+        // Jika gagal konek SMTP, tetap balik ke halaman sebelumnya tapi kasih tau errornya
+        return back()->with('success', 'Resi berhasil diupdate, tapi email gagal dikirim (Cek koneksi SMTP).');
     }
-
-    // 3. Ambil data terbaru untuk email
-    $order = $order->fresh(); 
-
-    // 4. Kirim email
-    if ($order->customer_email) {
-        \Illuminate\Support\Facades\Mail::to($order->customer_email)->send(new \App\Mail\OrderShippedMail($order));
-    } else {
-        \Illuminate\Support\Facades\Mail::to($order->user->email)->send(new \App\Mail\OrderShippedMail($order));
-    }
-
-    return redirect()->back()->with('success', 'Nomor resi diperbarui dan stok telah dikurangi!');
 }
 }
