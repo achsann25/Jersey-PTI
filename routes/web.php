@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan; // Tambahan untuk fix database
 use App\Http\Controllers\{
     AuthController, 
     AdminController, 
@@ -102,10 +103,30 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::patch('/orders/{id}', [AdminOrderController::class, 'updateStatus'])->name('orders.update');
     
     // --- TAMBAHAN FITUR TRACKING RESI ---
-    // Rute untuk handle form input resi dan trigger kirim email
     Route::patch('/orders/{id}/resi', [AdminOrderController::class, 'updateResi'])->name('orders.update_resi');
 
     // Laporan Penjualan
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
+});
+
+/*
+|--------------------------------------------------------------------------
+| 6. FIX DATABASE & CACHE (KHUSUS DEPLOY RAILWAY)
+|--------------------------------------------------------------------------
+*/
+Route::get('/fix-database', function () {
+    try {
+        // Paksa jalankan migrasi untuk membuat tabel 'sessions'
+        Artisan::call('migrate', ['--force' => true]);
+        
+        // Bersihkan cache biar settingan Variable di Railway refresh
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('view:clear');
+        
+        return "Berhasil! Tabel database sudah di-update dan cache dibersihkan. Silakan coba login lagi, Bro.";
+    } catch (\Exception $e) {
+        return "Ada masalah pas update: " . $e->getMessage();
+    }
 });
