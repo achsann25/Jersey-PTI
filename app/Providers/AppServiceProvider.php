@@ -13,10 +13,7 @@ class AppServiceProvider extends ServiceProvider
     }
 
     public function boot(): void
-    {
-        // Memaksa HTTPS agar form login/register tidak error "Not Secure"
-        if (config('app.env') === 'production') {
-            URL::forceScheme('https');
-        }
-    }
+{
+    \Illuminate\Support\Facades\URL::forceScheme('https');
+}
 }
