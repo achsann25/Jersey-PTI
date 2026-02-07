@@ -1,78 +1,87 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="p-6 bg-white rounded-xl shadow-md border print:shadow-none print:border-none">
+<div class="max-w-4xl mx-auto bg-white p-10 border shadow-sm print:border-none print:shadow-none print:p-0">
     
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-extrabold text-gray-900">Laporan Penjualan JerseyHolic</h1>
-            <p class="text-sm text-gray-500">Data per tanggal: {{ date('d F Y') }}</p>
-        </div>
-        <button onclick="window.print()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition shadow-lg print:hidden flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Cetak Laporan
-        </button>
+    <div class="text-center border-b-2 border-black pb-5 mb-8">
+        <h1 class="text-2xl font-bold uppercase tracking-widest">JerseyHolic Official Store</h1>
+        <p class="text-sm">Laporan Penjualan Produk Bulanan</p>
+        <p class="text-xs uppercase">Periode: {{ date('F', mktime(0, 0, 0, $month, 1)) }} {{ $year }}</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div class="p-5 bg-blue-50 border border-blue-100 rounded-xl">
-            <p class="text-xs font-bold text-blue-500 uppercase">Total Transaksi</p>
-            <p class="text-2xl font-black text-blue-900">{{ $totalTransactions }}</p>
-        </div>
-        <div class="p-5 bg-green-50 border border-green-100 rounded-xl">
-            <p class="text-xs font-bold text-green-500 uppercase">Total Pendapatan</p>
-            <p class="text-2xl font-black text-green-900">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</p>
-        </div>
-        <div class="p-5 bg-purple-50 border border-purple-100 rounded-xl">
-            <p class="text-xs font-bold text-purple-500 uppercase">Jersey Terjual</p>
-            <p class="text-2xl font-black text-purple-900">{{ $itemsSold }} Pcs</p>
-        </div>
+    <div class="print:hidden mb-6 flex gap-2">
+        <form action="{{ route('reports.index') }}" method="GET" class="flex gap-2">
+            <select name="month" class="border p-2 rounded text-sm">
+                @for($m=1; $m<=12; $m++)
+                    <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                @endfor
+            </select>
+            <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded text-sm">Tampilkan</button>
+        </form>
+        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Cetak PDF</button>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-gray-50 border-b">
-                    <th class="py-4 px-3 text-sm font-bold text-gray-600">ID</th>
-                    <th class="py-4 px-3 text-sm font-bold text-gray-600">Produk</th>
-                    <th class="py-4 px-3 text-sm font-bold text-gray-600">Pelanggan</th>
-                    <th class="py-4 px-3 text-sm font-bold text-gray-600">Size</th>
-                    <th class="py-4 px-3 text-sm font-bold text-gray-600">Qty</th>
-                    <th class="py-4 px-3 text-sm font-bold text-gray-600">Status</th>
-                    <th class="py-4 px-3 text-sm font-bold text-gray-600 text-right">Total Harga</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y">
-                @foreach($recentSales as $order)
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="py-4 px-3 text-sm">#{{ $order->id }}</td>
-                    <td class="py-4 px-3 text-sm font-semibold">{{ $order->product->team_name ?? 'Produk Dihapus' }}</td>
-                    <td class="py-4 px-3 text-sm text-gray-600">{{ $order->customer_name }}</td>
-                    <td class="py-4 px-3 text-sm font-bold">{{ $order->size }}</td>
-                    <td class="py-4 px-3 text-sm">{{ $order->quantity }}</td>
-                    <td class="py-4 px-3 text-xs">
-                        <span class="px-2 py-1 rounded-full font-bold uppercase 
-                            {{ $order->status == 'pending' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600' }}">
-                            {{ $order->status }}
-                        </span>
-                    </td>
-                    <td class="py-4 px-3 text-sm font-bold text-right">
-                        Rp {{ number_format($order->total_price, 0, ',', '.') }}
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <table class="w-full border-collapse border border-black">
+        <thead>
+            <tr class="bg-gray-50">
+                <th class="border border-black p-3 text-left text-sm uppercase">Nama Produk / Jersey</th>
+                <th class="border border-black p-3 text-center text-sm uppercase w-24">Terjual</th>
+                <th class="border border-black p-3 text-right text-sm uppercase w-48">Subtotal Pendapatan</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($salesData as $data)
+            <tr>
+                <td class="border border-black p-3 text-sm">
+                    {{ $data->product->team_name ?? 'Produk Tidak Diketahui' }}
+                </td>
+                <td class="border border-black p-3 text-center text-sm">
+                    {{ $data->total_qty }} Pcs
+                </td>
+                <td class="border border-black p-3 text-right text-sm">
+                    Rp {{ number_format($data->total_revenue, 0, ',', '.') }}
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="3" class="border border-black p-10 text-center text-gray-500 italic text-sm">
+                    Tidak ada transaksi pada periode ini.
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+        <tfoot>
+            <tr class="font-bold bg-gray-100">
+                <td class="border border-black p-3 text-sm uppercase text-right">TOTAL KESELURUHAN</td>
+                <td class="border border-black p-3 text-center text-sm">{{ $grandTotalQty }} Pcs</td>
+                <td class="border border-black p-3 text-right text-sm">Rp {{ number_format($grandTotalRevenue, 0, ',', '.') }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="hidden print:block mt-12">
+        <div class="flex justify-between">
+            <div class="text-center">
+                <p class="text-sm">Disetujui Oleh,</p>
+                <div class="h-20"></div>
+                <p class="text-sm font-bold border-t border-black pt-1">( Dosen Penguji )</p>
+            </div>
+            <div class="text-center">
+                <p class="text-sm">Bandung, {{ date('d M Y') }}</p>
+                <p class="text-sm">Admin Toko,</p>
+                <div class="h-20"></div>
+                <p class="text-sm font-bold border-t border-black pt-1">( {{ Auth::user()->name }} )</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
 @media print {
+    @page { margin: 2cm; }
     body { background: white !important; }
-    nav, aside, .print:hidden, button { display: none !important; }
-    .p-6 { padding: 0 !important; }
+    nav, aside, header, footer, .sidebar { display: none !important; }
+    .max-w-4xl { border: none !important; width: 100% !important; max-width: 100% !important; }
 }
 </style>
 @endsection
