@@ -4,9 +4,10 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
-use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth; // Tambahkan ini
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 use App\Http\Controllers\{
     AuthController,
@@ -32,7 +33,7 @@ Route::get('/product/{id}', [HomeController::class, 'show'])->name('product.show
 
 /*
 |--------------------------------------------------------------------------
-| 2. RAJAONGKIR
+| 2. RAJAONGKIR (Opsional jika pakai API)
 |--------------------------------------------------------------------------
 */
 Route::get('/provinces', [RajaOngkirController::class, 'getProvinces']);
@@ -41,7 +42,7 @@ Route::post('/check-ongkir', [RajaOngkirController::class, 'checkCost']);
 
 /*
 |--------------------------------------------------------------------------
-| 3. AUTH (CUSTOMER & ADMIN)
+| 3. AUTH (LOGIN & REGISTER)
 |--------------------------------------------------------------------------
 */
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -52,12 +53,11 @@ Route::post('/admin/login', [AuthController::class, 'login']);
 
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
-
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| 4. MIDTRANS CALLBACK (NO AUTH)
+| 4. MIDTRANS CALLBACK
 |--------------------------------------------------------------------------
 */
 Route::post('/midtrans-callback', [OrderController::class, 'callback']);
@@ -73,11 +73,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
 
-    // Checkout
+    // Checkout & Payment
     Route::get('/checkout/{id}', [OrderController::class, 'show'])->name('checkout');
     Route::post('/checkout', [OrderController::class, 'store'])->name('order.store');
 
-    // Orders
+    // Orders History
     Route::get('/my-orders', [OrderController::class, 'history'])->name('order.history');
     Route::get('/order/repay/{id}', [OrderController::class, 'repay'])->name('order.repay');
     Route::patch('/orders/{id}/done', [OrderController::class, 'markAsDone'])->name('order.done');
@@ -99,13 +99,15 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 7. FIX DATABASE + AUTO CREATE ADMIN (DEV ONLY)
+| 7. FIX DATABASE, ADMIN, & SHIPPING RATES (JURUS SAKTI)
 |--------------------------------------------------------------------------
 */
 Route::get('/fix-database', function () {
     try {
+        // 1. Jalankan Migrasi
         Artisan::call('migrate', ['--force' => true]);
 
+        // 2. Cek Kolom user_id di Tabel orders
         if (Schema::hasTable('orders')) {
             Schema::table('orders', function (Blueprint $table) {
                 if (!Schema::hasColumn('orders', 'user_id')) {
@@ -114,24 +116,47 @@ Route::get('/fix-database', function () {
             });
         }
 
-        $adminEmail = 'admin@gmail.com';
-        if (!User::where('role', 'admin')->exists()) {
-            User::create([
-                'name' => 'Administrator',
-                'username' => 'admin',
-                'email' => $adminEmail,
-                'password' => Hash::make('admin123'),
-                'role' => 'admin'
+        // 3. Suntik Data Kota & Ongkir (Banyak Kota)
+        if (Schema::hasTable('shipping_rates')) {
+            // Kosongkan dulu biar gak duplikat saat refresh
+            DB::table('shipping_rates')->truncate(); 
+            
+            DB::table('shipping_rates')->insert([
+                ['city_name' => 'Bandung', 'cost' => 10000],
+                ['city_name' => 'Jakarta', 'cost' => 15000],
+                ['city_name' => 'Surabaya', 'cost' => 20000],
+                ['city_name' => 'Medan', 'cost' => 35000],
+                ['city_name' => 'Makassar', 'cost' => 40000],
+                ['city_name' => 'Yogyakarta', 'cost' => 18000],
+                ['city_name' => 'Semarang', 'cost' => 17000],
+                ['city_name' => 'Palembang', 'cost' => 30000],
+                ['city_name' => 'Denpasar', 'cost' => 25000],
+                ['city_name' => 'Balikpapan', 'cost' => 38000],
+                ['city_name' => 'Malang', 'cost' => 19000],
+                ['city_name' => 'Manado', 'cost' => 42000],
+                ['city_name' => 'Banjarmasin', 'cost' => 36000],
+                ['city_name' => 'Pekanbaru', 'cost' => 32000],
+                ['city_name' => 'Bogor', 'cost' => 12000],
             ]);
         }
 
+        // 4. Reset/Update Admin
+        User::updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Administrator',
+                'username' => 'admin',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin'
+            ]
+        );
+
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
-        Artisan::call('view:clear');
 
-        return 'OK - Database & Admin siap (User: admin, Pass: admin123)';
+        return 'MANTAPP! Kereta sudah sampai di stasiun. Database sinkron, Admin siap, dan 15 Kota Ongkir sudah masuk!';
     } catch (\Exception $e) {
-        return "Error: " . $e->getMessage();
+        return "Aduh, ada masalah: " . $e->getMessage();
     }
 });
 
@@ -139,7 +164,6 @@ Route::get('/fix-database', function () {
 |--------------------------------------------------------------------------
 | 8. PENYELAMAT DEMO: FORCE LOGIN ADMIN
 |--------------------------------------------------------------------------
-| Jika login admin macet saat demo, akses link: /force-login-admin
 */
 Route::get('/force-login-admin', function () {
     $admin = User::where('role', 'admin')->first();
@@ -147,5 +171,5 @@ Route::get('/force-login-admin', function () {
         Auth::login($admin);
         return redirect()->route('admin.dashboard');
     }
-    return 'Admin tidak ditemukan. Jalankan /fix-database dulu.';
+    return 'Admin belum dibuat. Silakan akses /fix-database dulu!';
 });
