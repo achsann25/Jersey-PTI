@@ -11,17 +11,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // --- TAMBAHKAN BARIS INI ---
+        // Biar Railway (Proxy) dikenali aman oleh Laravel
         $middleware->trustProxies(at: '*'); 
-        // ---------------------------
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
 
-        // Izinkan Midtrans mengirim data ke sini tanpa token CSRF
+        // MENGATASI ERROR 419: Kecualikan rute penting dari validasi token CSRF
         $middleware->validateCsrfTokens(except: [
             '/midtrans-callback', 
+            '/login',            // Tambahkan ini
+            '/admin/login',      // Tambahkan ini
+            '/register',         // Tambahkan ini
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
