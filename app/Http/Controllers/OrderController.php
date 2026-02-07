@@ -12,9 +12,6 @@ use Midtrans\Snap;
 
 class OrderController extends Controller
 {
-    /**
-     * Menampilkan halaman checkout.
-     */
     public function show(Request $request, $id)
     {
         $product = Product::findOrFail($id);
@@ -23,29 +20,19 @@ class OrderController extends Controller
         return view('checkout', compact('product', 'size', 'shipping_rates'));
     }
 
-    /**
-     * Menampilkan riwayat pesanan milik user yang sedang login.
-     */
     public function history()
     {
         try {
-            // Mengambil order berdasarkan user_id yang sedang login
             $orders = Order::where('user_id', Auth::id())
                             ->with('product')
                             ->orderBy('created_at', 'desc')
                             ->get();
         } catch (\Exception $e) {
-            // JURUS DARURAT: Jika database di Railway belum ada kolom user_id, 
-            // tampilkan semua order agar halaman tidak error 500/Column Not Found
             $orders = Order::with('product')->orderBy('created_at', 'desc')->get();
         }
-                        
         return view('order_history', compact('orders'));
     }
 
-    /**
-     * Fungsi untuk bayar ulang jika transaksi sebelumnya pending.
-     */
     public function repay($id)
     {
         $order = Order::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
@@ -70,9 +57,6 @@ class OrderController extends Controller
         return view('payment', compact('snapToken', 'order'));
     }
 
-    /**
-     * Menyimpan pesanan baru ke database.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -88,7 +72,6 @@ class OrderController extends Controller
         $quantity = $request->quantity ?? 1;
         $total = ($product->price * $quantity) + $request->shipping_cost;
 
-        // Simpan Order
         $order = Order::create([
             'user_id' => Auth::id(),
             'product_id' => $request->product_id,
@@ -103,7 +86,6 @@ class OrderController extends Controller
             'status' => 'pending',
         ]);
 
-        // Midtrans
         Config::$serverKey = env('MIDTRANS_SERVER_KEY');
         Config::$isProduction = false;
         Config::$isSanitized = true;
@@ -126,7 +108,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Handle Webhook Midtrans.
+     * Jalur otomatis Midtrans mengupdate status pesanan.
      */
     public function callback(Request $request)
     {
@@ -135,9 +117,11 @@ class OrderController extends Controller
 
         if ($hashed == $request->signature_key) {
             if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
+                // Midtrans kirim order_id format: INV-ID-TIME
                 $orderParts = explode('-', $request->order_id);
-                $orderId = $orderParts[1]; 
-                $order = Order::find($orderId);
+                $idDatabase = $orderParts[1]; 
+                
+                $order = Order::find($idDatabase);
                 if ($order) {
                     $order->update(['status' => 'paid']);
                 }
@@ -145,21 +129,13 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Konfirmasi pesanan selesai.
-     */
     public function markAsDone($id)
     {
-        $order = Order::where('id', $id)
-                      ->where('user_id', Auth::id())
-                      ->firstOrFail();
-
+        $order = Order::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         if ($order->status !== 'shipped') {
             return back()->with('error', 'Pesanan belum dikirim.');
         }
-
         $order->update(['status' => 'done']);
-
         return back()->with('success', 'Pesanan selesai!');
     }
 }
