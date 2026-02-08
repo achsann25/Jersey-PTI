@@ -66,6 +66,11 @@ Route::get('/fix-database', function () {
     try {
         Artisan::call('migrate', ['--force' => true]);
 
+        // MENGOSONGKAN DATA PESANAN (RESET TRANSAKSI)
+        if (Schema::hasTable('orders')) {
+            DB::table('orders')->truncate(); 
+        }
+
         if (Schema::hasTable('orders')) {
             Schema::table('orders', function (Blueprint $table) {
                 if (!Schema::hasColumn('orders', 'user_id')) {
@@ -98,7 +103,7 @@ Route::get('/fix-database', function () {
             ['name' => 'Admin', 'username' => 'admin', 'password' => Hash::make('admin123'), 'role' => 'admin']
         );
 
-        return 'DATABASE MANTAP - Kota & Admin Siap';
+        return 'DATABASE RESET BERHASIL - Data Pesanan Kosong & Admin Siap';
     } catch (\Exception $e) {
         return "Error: " . $e->getMessage();
     }
